@@ -22,9 +22,10 @@ class GameObject
     this.program = program;
     this.mesh = mesh;
     this.model = mat4();
+    // this.isAlive = true;
 
     if (coordinates) {
-      this.coordinates = coordinates;
+      this.initialCoordinates = coordinates;
       this.x = coordinates[0];
       this.y = coordinates[1];
       this.z = coordinates[2];
@@ -41,7 +42,7 @@ class GameObject
     this.setRandomColor();
   }
 
-    findAABB() {
+  findAABB() {
     // only for sphere yet
     this.upper_left = [
       this.x - this.width/2,
@@ -62,6 +63,14 @@ class GameObject
 
   setRandomColor() {
     this.color = [randomDark(), randomDark(), randomDark()];
+  }
+
+  // checks whether two objects collide
+  intersect(b) {
+    var a = this.BB;
+    return (a.minX <= b.maxX && a.maxX >= b.minX) &&
+           (a.minY <= b.maxY && a.maxY >= b.minY) &&
+           (a.minZ <= b.maxZ && a.maxZ >= b.minZ);
   }
 
   draw(viewProjection, lightPos, model){

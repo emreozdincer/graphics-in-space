@@ -2,7 +2,7 @@
 var time, lastTime, frameNumber, health, totalMinutes, totalMilliSeconds, lostHealthPerSecond, elapsed, rotationAngle, gameEnded;
 // objects, models
 var models = {}; var objects = {};
-var sphere1, sphere2, sphere3, sphere4,  teddy, castle, gun, background;
+var sphere1, sphere2, sphere3, sphere4,  teddy, castle, gun, background, objectNames;
 // design
 var spaceTexture, lightPos, camera, ambientMusic;
 
@@ -135,6 +135,12 @@ function animate() {
 
 function animateObjects() {
   sphere1.x -= Math.cos(degToRad(rotationAngle)) * 0.001 * elapsed;
+
+  // Example box-box collision
+  if (sphere1.intersect(sphere2.BB) == true) {
+    console.log("Objects are colliding!");
+  }
+  sphere2.z += Math.sin(degToRad(rotationAngle)) * 0.005 * elapsed;
   sphere3.y += Math.sin(degToRad(rotationAngle)) * 0.001 * elapsed;
   sphere3.x -= Math.cos(degToRad(rotationAngle)) * 0.001 * elapsed;
   sphere4.y -= Math.sin(degToRad(rotationAngle)) * 0.002 * elapsed;
@@ -155,35 +161,22 @@ function gameLoop() {
 
   // Draw 2D Parts (Background + Gun)
   background.draw( mult(orthoProj,viewStable) );
-  gun.draw (mult(orthoProj,viewStable) );
+  gun.draw ( mult(orthoProj,viewStable) );
 
   if (!gameEnded) {
     view = lookAt(add(camera.at, camera.toCam), camera.at, [0, 1, 0]);
 
     // Draw 3D Scene
-    var keys = Object.keys(objects)
-    for (var i=0; i<keys.length; i++) {
-        if (objects[keys[i]].insideFrustrum) {
-          objects[keys[i]].draw(mult(persProj,view), lightPos);
+    objectNames = Object.keys(objects)
+    for (var i=0; i<objectNames.length; i++) {
+        if (objects[objectNames[i]].insideFrustrum) {
+          objects[objectNames[i]].draw(mult(persProj,view), lightPos);
         }
     }
 
     animate();
 
-    document.onkeydown = function(e) {
-      if (e.keyCode == 80) {
-        // P
-        ambientMusic.play();
-      }
-      else if (e.keyCode == 83) {
-        // S
-        ambientMusic.stop();
-      }
-      else if (e.keyCode == 37 || e.keyCode == 38 || e.keyCode == 39 || e.keyCode == 40) {
-        // arrows
-        camera.move(e.keyCode, elapsed);
-      }
-    }
+    document.onkeydown = handleKeyDown;
 
     document.getElementById("restart").onclick = restart;
 
@@ -200,10 +193,25 @@ function gameLoop() {
 
 }
 
+function handleKeyDown() {
+ if (event.key == "P") {
+    ambientMusic.play();
+ }
+ else if (event.key == "S") {
+   ambientMusic.stop();
+ }
+ else if (event.key == "ArrowUp" || event.key == "ArrowLeft" || event.key == "ArrowDown" || event.key == "ArrowRight") {
+   camera.move(event.key, elapsed);
+ }
+ else if (event.key == " ") {
+   camera.shoot();
+ }
+}
+
 // The sleep is necessary, otherwise requestAnimationFrame calls get stacked
 function restart() {
   gameEnded = true;
-  sleep(100).then(() => {
+  sleep(50).then(() => {
     setInitialState();
     gameLoop();
   })
