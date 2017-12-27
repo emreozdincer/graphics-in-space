@@ -51,7 +51,7 @@
         {
             color = uColor;
         }
-        
+
         if (objectType == 1.0) // Background, not enlightened
         {
           gl_FragColor = texture2D(uSampler, vec2(textureCoord.s,textureCoord.t));
@@ -91,6 +91,10 @@
   <div id="container">
     <canvas id="gl-canvas" width="860" height="640"></canvas>
     <div id="hud"></div> <br/>
+    <select id="detailOption">
+      <option value="high" selected>High</option>
+      <option value="low">Low</option>
+    </select>
     <button class="button" id='restart'>Restart</button>
     <button class="button" id='harakiri'>HARAKIRI!</button>
   </div>

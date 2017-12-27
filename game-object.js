@@ -1,7 +1,7 @@
 class GameObject
 {
   // dimensions: width, height, depth
-  constructor(mesh, coordinates, dimensions){
+  constructor(mesh, coordinates, dimensions, mesh_low){
     var program = initShaders(gl, 'vertex-shader-object', 'fragment-shader-object');
     program.model = gl.getUniformLocation(program, "model");
     program.viewprojection = gl.getUniformLocation(program, "view_projection");
@@ -22,6 +22,7 @@ class GameObject
     this.program = program;
     this.mesh = mesh;
     this.model = mat4();
+    this.setRandomColor();
     // this.isAlive = true;
 
     if (coordinates) {
@@ -38,8 +39,11 @@ class GameObject
       this.depth = dimensions[2];
     }
 
+    if (mesh_low) {
+      this.mesh_low = mesh_low;
+    }
+
     this.insideFrustrum = true; // dummy
-    this.setRandomColor();
   }
 
   findAABB() {
@@ -73,56 +77,93 @@ class GameObject
            (a.minZ <= b.maxZ && a.maxZ >= b.minZ);
   }
 
-  draw(viewProjection, lightPos, model){
+  setLevel(camera, levelOption) {
+    if (levelOption == "low") {
+      return "low";
+    }
 
-      model = model || mat4();
-      model = mult(this.model, model);
+    var detailLevel;
+    var distance = Math.sqrt(
+        (this.x-camera.x)*(this.x-camera.x)
+        +(this.y-camera.y)*(this.y-camera.y)
+        +(this.z-camera.z)*(this.z-camera.z)
+      );
+    if (distance > 200) {
+      detailLevel = "low";
+    }
+    else {
+      detailLevel = "high";
+    }
+    return detailLevel;
+  }
 
-      if (this.x != null && this.y != null && this.z !=null) {
-        this.findAABB();
-        model = mult(this.model, translate(this.x, this.y, this.z));
-      }
+  draw(viewProjection, lightPos, detailLevel) {
+    var model = mat4();
+    model = mult(this.model, model);
 
-      viewProjection = viewProjection || mat4();
-      gl.useProgram(this.program);
+    if (this.x != null && this.y != null && this.z !=null) {
+      this.findAABB();
+      model = mult(this.model, translate(this.x, this.y, this.z));
+    }
 
-      if (this.mesh.type == "background") {
-        gl.uniform1f(this.program.objectType, 1.0);
-        gl.activeTexture(gl.TEXTURE0);
-        gl.bindTexture(gl.TEXTURE_2D, spaceTexture);
-        gl.uniform1i(this.program.samplerUniform, 0);
+    var mesh = this.mesh;
 
-        gl.enableVertexAttribArray(this.program.tpos_attr);
-        gl.bindBuffer(gl.ARRAY_BUFFER, this.mesh.textureBuffer);
-        gl.vertexAttribPointer(this.program.tpos_attr, this.mesh.textureBuffer.itemSize, gl.FLOAT, false, 0, 0);
-      }
-      else {
-        // Disable Texture
-        gl.disableVertexAttribArray(this.program.tpos_attr);
-        gl.bindTexture(gl.TEXTURE_2D, null);
-        gl.uniform1f(this.program.objectType, 0.0);
+    if (detailLevel == "low" && mesh.type == "sphere") {
+      mesh = this.mesh_low;
+      model = mult(model, scalem(2,2,2));
+    }
 
-        if (this.mesh.type == "sphere" || this.mesh.type == "gun"){
-         gl.uniform1f(this.program.objectType, 2.0);
-         gl.uniform3f(this.program.colorUniform, this.color[0], this.color[1], this.color[2]);
-       }
-      }
+    viewProjection = viewProjection || mat4();
+    gl.useProgram(this.program);
 
-      gl.uniformMatrix4fv(this.program.model, false, flatten( model));
-      gl.uniformMatrix4fv(this.program.viewprojection, false, flatten(viewProjection));
+    if (mesh.type == "background") {
+      gl.uniform1f(this.program.objectType, 1.0);
+      gl.activeTexture(gl.TEXTURE0);
+      gl.bindTexture(gl.TEXTURE_2D, spaceTexture);
+      gl.uniform1i(this.program.samplerUniform, 0);
 
-      if (lightPos) {
-        gl.uniform3f(this.program.lightPos, lightPos[0], lightPos[1], lightPos[2]);
-      }
+      gl.enableVertexAttribArray(this.program.tpos_attr);
+      gl.bindBuffer(gl.ARRAY_BUFFER, mesh.textureBuffer);
+      gl.vertexAttribPointer(this.program.tpos_attr, mesh.textureBuffer.itemSize, gl.FLOAT, false, 0, 0);
+    }
+    else if (mesh.type == "gun") {
+      gl.uniform1f(this.program.objectType, 1.0);
+      gl.activeTexture(gl.TEXTURE0);
+      gl.bindTexture(gl.TEXTURE_2D, gunTexture);
+      gl.uniform1i(this.program.samplerUniform, 0);
 
-      gl.bindBuffer(gl.ARRAY_BUFFER, this.mesh.vertexBuffer);
-      gl.vertexAttribPointer(this.program.vpos_attr, this.mesh.vertexBuffer.itemSize, gl.FLOAT, false, 0, 0);
+      gl.enableVertexAttribArray(this.program.tpos_attr);
+      gl.bindBuffer(gl.ARRAY_BUFFER, mesh.textureBuffer);
+      gl.vertexAttribPointer(this.program.tpos_attr, mesh.textureBuffer.itemSize, gl.FLOAT, false, 0, 0);
 
-      gl.bindBuffer(gl.ARRAY_BUFFER, this.mesh.normalBuffer);
-      gl.vertexAttribPointer(this.program.vnor_attr, this.mesh.normalBuffer.itemSize, gl.FLOAT, false, 0, 0);
+    }
+    else {
+      // Disable Texture
+      gl.disableVertexAttribArray(this.program.tpos_attr);
+      gl.bindTexture(gl.TEXTURE_2D, null);
+      gl.uniform1f(this.program.objectType, 0.0);
 
-      gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, this.mesh.indexBuffer);
-      gl.drawElements(gl.TRIANGLES, this.mesh.indexBuffer.numItems, gl.UNSIGNED_SHORT, 0);
+      if (mesh.type == "sphere") {
+       gl.uniform1f(this.program.objectType, 2.0);
+       gl.uniform3f(this.program.colorUniform, this.color[0], this.color[1], this.color[2]);
+     }
+    }
+
+    gl.uniformMatrix4fv(this.program.model, false, flatten( model));
+    gl.uniformMatrix4fv(this.program.viewprojection, false, flatten(viewProjection));
+
+    if (lightPos) {
+      gl.uniform3f(this.program.lightPos, lightPos[0], lightPos[1], lightPos[2]);
+    }
+
+    gl.bindBuffer(gl.ARRAY_BUFFER, mesh.vertexBuffer);
+    gl.vertexAttribPointer(this.program.vpos_attr, mesh.vertexBuffer.itemSize, gl.FLOAT, false, 0, 0);
+
+    gl.bindBuffer(gl.ARRAY_BUFFER, mesh.normalBuffer);
+    gl.vertexAttribPointer(this.program.vnor_attr, mesh.normalBuffer.itemSize, gl.FLOAT, false, 0, 0);
+
+    gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, mesh.indexBuffer);
+    gl.drawElements(gl.TRIANGLES, mesh.indexBuffer.numItems, gl.UNSIGNED_SHORT, 0);
 
   }
 }

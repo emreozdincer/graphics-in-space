@@ -24,6 +24,10 @@ function sound(src) {
 function randomDark() {
   min = 0;
   max = 0.2;
+  return random(0, 0.2);
+}
+
+function random(min, max) {
   return Math.random() * (max - min) + min;
 }
 
