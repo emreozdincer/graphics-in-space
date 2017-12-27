@@ -1,54 +1,54 @@
-var time, lastTime, frameNumber, health, totalMinutes, totalMilliSeconds, lostHealthPerSecond, elapsed, gameEnded; // game state
-var sphere1,sphere2, sphere3, teddy, castle, gun, backgroundSpace; // models
-var models = {};
-var spaceTexture; // textures
-var lightPos, camera; // light, camera
-var ambientMusic;
+// game state
+var time, lastTime, frameNumber, health, totalMinutes, totalMilliSeconds, lostHealthPerSecond, elapsed, rotationAngle, gameEnded;
+// objects, models
+var models = {}; var objects = {};
+var sphere1, sphere2, sphere3, sphere4,  teddy, castle, gun, background;
+// design
+var spaceTexture, lightPos, camera, ambientMusic;
 
 function setInitialState() {
-  lostHealthPerSecond = 5;
+  lostHealthPerSecond = 1;
   frameNumber = 0;
   health = 100;
   totalMilliSeconds = 0;
   totalMinutes = 0;
   elapsed = 0;
+  rotationAngle = 0;
   gameEnded = false;
-  lightPos = vec3(0, 1, 2);
+  lightPos = vec3(0, 5, 15);
   camera = new Camera;
 }
 
+// Also starts the game after loading models
 function modelLoad(meshes) {
   models.meshes = meshes;
   OBJ.initMeshBuffers(gl, models.meshes.sphere);
-  OBJ.initMeshBuffers(gl, models.meshes.teddy);
-  OBJ.initMeshBuffers(gl, models.meshes.castle);
   OBJ.initMeshBuffers(gl, models.meshes.gun);
   OBJ.initMeshBuffers(gl, models.meshes.cube);
 
-  // radius of spheres is 1.
-  sphere1 = new GameObject(models.meshes.sphere, [-1.5,0,0], [2,2,2]);
-  sphere2 = new GameObject(models.meshes.sphere, [1.5,0,0], [2,2,2]);
-  sphere3 = new GameObject(models.meshes.sphere, [4,10,-100], [2,2,2]);
-  sphere4 = new GameObject(models.meshes.sphere, [-1,-5,-100], [2,2,2]);
+  models.meshes.sphere.type = "sphere";
+  sphere1 = new GameObject(models.meshes.sphere, [-2,0,0], [2,2,2]);
+  sphere2 = new GameObject(models.meshes.sphere, [2,0,0], [2,2,2]);
+  sphere3 = new GameObject(models.meshes.sphere, [4,-5,-100], [2,2,2]);
+  sphere4 = new GameObject(models.meshes.sphere, [-20,10,-100], [2,2,2]);
 
-  teddy = new GameObject(models.meshes.teddy);
-  teddy.model = mult(teddy.model, translate(0,0.2,5));
-  teddy.model = mult(teddy.model, scalem(0.02,0.02,0.02));
-
-  castle = new GameObject(models.meshes.castle);
-  castle.model = mult(castle.model, translate(0,-1,5));
-  castle.model = mult(castle.model, scalem(1,1,2));
-
+  models.meshes.gun.type = "gun";
   gun = new GameObject(models.meshes.gun);
   gun.model = mult(gun.model, translate(0,-1,0));
   gun.model = mult(gun.model, rotate(90, [0,1,0]));
 
-  backgroundSpace = new GameObject(models.meshes.cube);
-  backgroundSpace.model = mult(backgroundSpace.model, translate(0,0,1000));
-  backgroundSpace.model = mult(backgroundSpace.model, scalem(2,2,0.01));
-  backgroundSpace.type = "background"
+  models.meshes.cube.type = "background";
+  background = new GameObject(models.meshes.cube);
+  background.model = mult(background.model, translate(0,0,1000));
+  background.model = mult(background.model, scalem(2,2,0.01))
 
-  totalTime = 0;
+  // keep a hash table for objects (to be able to loop through)
+  objects = {}
+  objects.sphere1 = sphere1;
+  objects.sphere2 = sphere2;
+  objects.sphere3 = sphere3;
+  objects.sphere4 = sphere4;
+
   gameLoop();
 }
 
@@ -87,8 +87,6 @@ window.onload = function () {
 
   OBJ.downloadMeshes({
       'sphere': 'models/sphere.obj',
-      'teddy': 'models/teddy.obj',
-      'castle': 'models/Castle OBJ.obj',
       'gun': 'models/handgun.obj',
       'cube': 'models/cube.obj',
   }, modelLoad);
@@ -100,11 +98,6 @@ window.onload = function () {
   ambientMusic.sound.loop = true;
   ambientMusic.play();
 
-  // restart after game end
-  document.getElementById("restart").onclick = function() {
-    setInitialState();
-    gameLoop();
-  }
 }
 
 function animate() {
@@ -129,11 +122,27 @@ function animate() {
   elapsed = time - lastTime;
   totalMilliSeconds += elapsed;
 
+  rotationAngle = ((rotationAngle + 1)) % 360
+
+  animateObjects();
+
   document.getElementById("hud").innerHTML =
   "<span id='time' class='fa fa-hourglass-o fa-2x'>" + pad(totalMinutes) + ':'
   + pad(Math.round(totalMilliSeconds/1000)) + "</span>"
   + "<span id='hp' class='fa fa-heart fa-2x' > " + health + "</span>";
   lastTime = time;
+}
+
+function animateObjects() {
+  sphere1.x -= Math.cos(degToRad(rotationAngle)) * 0.001 * elapsed;
+  sphere3.y += Math.sin(degToRad(rotationAngle)) * 0.001 * elapsed;
+  sphere3.x -= Math.cos(degToRad(rotationAngle)) * 0.001 * elapsed;
+  sphere4.y -= Math.sin(degToRad(rotationAngle)) * 0.002 * elapsed;
+  sphere4.x += 0.001 * elapsed;
+
+  if (sphere4.x > 30) {
+    sphere4.x = -30;
+  }
 }
 
 function gameLoop() {
@@ -145,28 +154,38 @@ function gameLoop() {
   persProj = perspective(20, screenSize[0] / screenSize[1], 0.1, 1000);
 
   // Draw 2D Parts (Background + Gun)
-  backgroundSpace.draw("background", mult(orthoProj,viewStable));
-  gun.draw(lightPos, mult(orthoProj,viewStable));
+  background.draw( mult(orthoProj,viewStable) );
+  gun.draw (mult(orthoProj,viewStable) );
 
   if (!gameEnded) {
     view = lookAt(add(camera.at, camera.toCam), camera.at, [0, 1, 0]);
 
     // Draw 3D Scene
-    sphere1.draw(lightPos, mult(persProj,view));
-    sphere2.draw(lightPos, mult(persProj,view));
-    sphere3.draw(lightPos, mult(persProj,view));
-    sphere4.draw(lightPos, mult(persProj,view));
-
-    // teddy.draw(lightPos, mult(persProj,view));
-    // castle.draw(lightPos, mult(persProj,view));
+    var keys = Object.keys(objects)
+    for (var i=0; i<keys.length; i++) {
+        if (objects[keys[i]].insideFrustrum) {
+          objects[keys[i]].draw(mult(persProj,view), lightPos);
+        }
+    }
 
     animate();
 
     document.onkeydown = function(e) {
+      if (e.keyCode == 80) {
+        // P
+        ambientMusic.play();
+      }
+      else if (e.keyCode == 83) {
+        // S
+        ambientMusic.stop();
+      }
+      else if (e.keyCode == 37 || e.keyCode == 38 || e.keyCode == 39 || e.keyCode == 40) {
+        // arrows
         camera.move(e.keyCode, elapsed);
+      }
     }
 
-    document.getElementById("restart").onclick = restart; // function call
+    document.getElementById("restart").onclick = restart;
 
     document.getElementById("harakiri").onclick = function() {
       gameEnded = true;

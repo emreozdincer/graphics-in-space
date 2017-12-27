@@ -21,6 +21,16 @@ function sound(src) {
     }
 }
 
+function randomDark() {
+  min = 0;
+  max = 0.2;
+  return Math.random() * (max - min) + min;
+}
+
+function degToRad(degrees) {
+    return degrees * Math.PI / 180;
+}
+
 function sleep (time) {
   return new Promise((resolve) => setTimeout(resolve, time));
 }
