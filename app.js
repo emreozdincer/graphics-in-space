@@ -26,8 +26,7 @@ function setInitialState() {
     }
   }
   gameEnded = false;
-  detailOption = "high";
-  lightPos = vec3(0, 5, 15);
+  lightPos = vec3(0, 0, 1);
   camera = new Camera;
 
 }
@@ -45,15 +44,13 @@ function modelLoad(meshes) {
   models.meshes.sphere.type = "sphere";
   models.meshes.low_sphere.type = "sphere";
   sphere1 = new GameObject(models.meshes.sphere, [-2,0,0], [2,2,2], models.meshes.low_sphere);
-  sphere2 = new GameObject(models.meshes.sphere, [2,0,0], [2,2,2], models.meshes.low_sphere);
+  sphere2 = new GameObject(models.meshes.sphere, [2,0,-5], [2,2,2], models.meshes.low_sphere);
   sphere3 = new GameObject(models.meshes.sphere, [4,-5,-100], [2,2,2], models.meshes.low_sphere);
   sphere4 = new GameObject(models.meshes.sphere, [-20,10,-100], [2,2,2], models.meshes.low_sphere);
 
   models.meshes.cubeGun.type = "gun";
   gun = new GameObject(models.meshes.cubeGun);
-  // gun.model = mult(gun.model, scalem(1,1,0.2))
   gun.model = mult(gun.model, translate(-0.25,-1.1,0));
-  // gun.model = mult(gun.model, rotate(30, [0,1,0]));
   gun.model = mult(gun.model, rotate(45, [0,0,1]));
 
   models.meshes.cubeBackground.type = "background";
@@ -161,7 +158,7 @@ function animate() {
 
   rotationAngle = ((rotationAngle + 1)) % 360
 
-  // animateObjects();
+  animateObjects();
 
   document.getElementById("hud").innerHTML =
   "<span id='time' class='fa fa-hourglass-o fa-2x'>" + pad(totalMinutes) + ':'
@@ -174,13 +171,12 @@ function animate() {
 function animateObjects() {
   sphere1.x -= Math.cos(degToRad(rotationAngle)) * 0.001 * elapsed;
 
-  // Example box-box collision
-  if (sphere1.intersect(sphere2.BB) == true) {
-    console.log("Objects are colliding!");
-  }
+  sphere2.y += Math.cos(degToRad(rotationAngle)) * 0.001 * elapsed;
   sphere2.z += Math.sin(degToRad(rotationAngle)) * 0.005 * elapsed;
+
   sphere3.y += Math.sin(degToRad(rotationAngle)) * 0.001 * elapsed;
   sphere3.x -= Math.cos(degToRad(rotationAngle)) * 0.001 * elapsed;
+
   sphere4.y -= Math.sin(degToRad(rotationAngle)) * 0.002 * elapsed;
   sphere4.x += 0.001 * elapsed;
 

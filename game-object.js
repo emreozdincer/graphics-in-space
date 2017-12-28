@@ -72,11 +72,28 @@ class GameObject
   // checks whether two objects collide
   intersect(b) {
     var a = this.BB;
+    b = b.BB;
     return (a.minX <= b.maxX && a.maxX >= b.minX) &&
            (a.minY <= b.maxY && a.maxY >= b.minY) &&
            (a.minZ <= b.maxZ && a.maxZ >= b.minZ);
   }
 
+  // loops through all boxes and checks if collide
+  collidesWithOtherBox(i) {
+    for (var j=0; j<objectNames.length; j++) {
+      if (i == j) { // don't check yourself
+        continue;
+      }
+      else {
+        if (objects[objectNames[i]].intersect(objects[objectNames[j]])) {
+          // console.log(objects[objectNames[i]].x + " " + objects[objectNames[i]].y + " " + objects[objectNames[i]].z);
+          // console.log(objects[objectNames[j]].x + " " + objects[objectNames[j]].y + " " + objects[objectNames[j]].z);
+          return true;
+        }
+      }
+    }
+    return false;
+  }
   setLevel(camera, levelOption) {
     if (levelOption == "low") {
       return "low";
@@ -155,6 +172,8 @@ class GameObject
     if (lightPos) {
       gl.uniform3f(this.program.lightPos, lightPos[0], lightPos[1], lightPos[2]);
     }
+
+    gl.uniform3f(this.program.cameraPos, camera.x, camera.y, camera.z);
 
     gl.bindBuffer(gl.ARRAY_BUFFER, mesh.vertexBuffer);
     gl.vertexAttribPointer(this.program.vpos_attr, mesh.vertexBuffer.itemSize, gl.FLOAT, false, 0, 0);

@@ -10,6 +10,7 @@ body {
 }
 
 #hud {
+  color: Black;
   opacity: 0.5;
   background-color: AliceBlue;
   top: 570px;
@@ -19,18 +20,15 @@ body {
 }
 
 #hud #hp {
-  color: maroon;
   float: left;
   margin-left: 5px;
 }
 
 #hud #score {
-  color: maroon;
   margin-left: 360px;
   position: absolute;
 }
 #hud #time {
-  color: darkred;
   float: right;
   margin-right: 5px;
 }
@@ -47,7 +45,7 @@ body {
 }
 
 .button {
-    background-color: maroon;
+    background-color: black;
     border: none;
     color: white;
     padding: 15px 32px;
@@ -57,7 +55,7 @@ body {
 }
 
 select {
-  background-color: maroon;
+  background-color: black;
   border: none;
   color: white;
   padding: 15px 32px;

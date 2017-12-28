@@ -33,9 +33,14 @@ class Camera
       for (var i=0; i<objectNames.length; i++) {
         if (this.isTargetHit([this.x, this.y], objects[objectNames[i]].BB)) {
           hit = true;
-          objects[objectNames[i]].z += -15;
-          objects[objectNames[i]].y += 2 * random(-1, 1);
-          objects[objectNames[i]].x += 3 * random(-1, 1);
+
+          // push the hit object randomly while ensuring it doesnt collide with others
+          do {
+            objects[objectNames[i]].z += random(0, -5);
+            objects[objectNames[i]].y += random(-2, 2);
+            objects[objectNames[i]].x += random(-2, 2);
+          } while (objects[objectNames[i]].collidesWithOtherBox(i))
+
           break;
         }
       }

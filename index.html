@@ -21,13 +21,16 @@
     varying vec4 pos;
     varying vec2 textureCoord;
 
-
     void main() {
-        normal = vNormal;
-        textureCoord = vTexture;
         pos = model * vec4(vPosition,1);
         gl_Position = view_projection * pos;
         pos /= pos.w;
+
+        vec4 normalPos = model * vec4(vPosition + vNormal, 1.0);
+        normalPos /= normalPos.w;
+        normal = normalize (normalPos - pos).xyz;
+
+        textureCoord = vTexture;
     }
 
 </script>
@@ -38,6 +41,7 @@
     varying vec3 normal;
     varying vec4 pos;
 
+    uniform vec3 cameraPos;
     uniform vec3 lightPos;
     uniform vec3 uColor;
     uniform float objectType;
@@ -45,29 +49,43 @@
 
     void main() {
         vec3 lightDir = normalize(lightPos - pos.xyz);
-        float dotNL = dot(lightDir, normalize(normal));
-        vec3 color = vec3(0.4,0.4,0.4);
-        if (objectType == 2.0)
-        {
-            color = uColor;
-        }
 
-        if (objectType == 1.0) // Background, not enlightened
+        float dotNL = dot(lightDir, normal);
+
+        vec3 ambientColor = vec3(0.1, 0.1, 0.1);
+        float ambientCoef = 0.0; // not using ambientColor
+
+        vec3 diffuseColor = vec3(0.4,0.4,0.4);
+        float diffuseCoef;
+
+        vec3 specularColor =  vec3(1.0,1.0,1.0);
+        float specularCoef;
+
+        vec3 color = vec3(0,0,0); // total color
+
+        if (objectType == 1.0) // Background/gun => no lighting, only texture
         {
           gl_FragColor = texture2D(uSampler, vec2(textureCoord.s,textureCoord.t));
         }
-        else if(dotNL > 0.0) // Enlightened
+        else
         {
-          color += vec3(0.4,0.4,0.4) * dotNL;
-          vec3 toEye = lightDir;
-          vec3 reflect = -lightDir - 2. * (dot(normalize(normal),-lightDir)) * normalize(normal);
-          float specFact = pow(clamp(dot(toEye,reflect),0.0,1.0),2.0);
-          color += specFact * vec3(0.2,0.2,0.2);
-          gl_FragColor = vec4(color,1.0);
-        }
-        else // dark
-        {
-          // pink
+          if (objectType == 2.0) // colorize the spheres
+          {
+              color += uColor;
+          }
+
+          if(dotNL > 0.0) // light hits object
+          {
+            // diffuse light
+            diffuseCoef = dotNL;
+
+            // specular light
+            vec3 toEye = normalize(pos.xyz - cameraPos);
+            vec3 reflect = reflect(lightDir, normal);
+            float specularCoef = pow(clamp(dot(toEye,reflect),0.0, 1.0),256.0);
+
+            color += diffuseCoef * diffuseColor + specularCoef * specularColor + ambientCoef * ambientColor;
+          }
           gl_FragColor = vec4(color, 1.0);
         }
     }
