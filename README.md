@@ -1,5 +1,21 @@
 # 3D Game with WebGL for Computer Graphics course in Sabanci University.
 
+## Game:
+https://emreozdincer.github.io/graphics-in-space/
+
+**Objective**
+
+Shoot objects. Lose HP every second, and every time you miss. The game gets increasingly harder.
+
+**Controls**
+* Arrows: move
+* W/S: move forward/backward
+* Space: shoot
+* R: Restart
+* G: Toggle god mode
+* P: Toggle ambient sound
+
+
 ## Notable Functionality:
 * 3D Viewing and Objects
 * User Input
@@ -9,20 +25,7 @@
 * Collision Detection
 * Level of Detail Control
 
-## Game Controls:
-* Try to shoot as many objects as possible.
-* You lose HP every second and every time you miss
-* The game gets increasingly harder every second
-
-* Arrows: move
-* W/S: move forward/backward
-* Space: shoot
-
-* R: Restart
-* G: Toggle god mode
-* P: Toggle ambient sound
-
 ## To Do:
-* Improve CSS
-* Improve gameplay
 * Apply more CG techniques
+* Improve ~~gameplay~~ fun
+* Improve code organization
