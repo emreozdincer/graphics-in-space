@@ -5,9 +5,6 @@ class Camera
       this.eye = vec3(0,0,15);
       this.toCam = subtract(this.eye, this.at);
       this.updateCoordinates();
-      // mouse
-      this.lastX = screenSize[0]/2;
-      this.lastY = screenSize[1]/2;
     }
 
     updateCoordinates () {
@@ -29,22 +26,20 @@ class Camera
 
 
     shoot() {
-      var hit = false;
+      var hitSomething = false;
       for (var i=0; i<objectNames.length; i++) {
         if (this.isTargetHit([this.x, this.y], objects[objectNames[i]].BB)) {
-          hit = true;
-
-          // push the hit object randomly while ensuring it doesnt collide with others
+          hitSomething = true;
+          // push the shot object randomly while ensuring it doesnt collide with others
           do {
             objects[objectNames[i]].z += random(0, -5);
             objects[objectNames[i]].y += random(-2, 2);
             objects[objectNames[i]].x += random(-2, 2);
-          } while (objects[objectNames[i]].collidesWithOtherBox(i))
-
+          } while (objects[objectNames[i]].collidesWithOtherBox(i));
           break;
         }
       }
-      if (hit) {
+      if (hitSomething) {
         console.log("You hit an object!");
         score +=1;
         if (health+10 > 100) {
@@ -55,7 +50,9 @@ class Camera
       }
       else {
         console.log("You missed.");
-        health -= parseInt(2 * frameNumber/100);
+        if (!godMode) {
+          health -= parseInt(frameNumber * 0.02);
+        }
       }
     }
 

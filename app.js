@@ -1,8 +1,8 @@
 // game state
-var score, bestScore, time, lastTime, frameNumber, health, totalMinutes, totalMilliSeconds, lostHealthPerSecond, elapsed, rotationAngle, gameEnded, objectDistance, detailOption;
+var score, bestScore, time, lastTime, frameNumber, health, totalMinutes, totalMilliSeconds, lostHealthPerSecond, godMode, elapsed, rotationAngle, gameEnded, objectDistance, detailOption;
 // objects, models
 var models = {}; var objects = {}; var textures = {};
-var sphere1, sphere2, sphere3, sphere4, teddy, castle, gun, background, objectNames;
+var spheres, teddy, castle, gun, background, objectNames;
 // design
 var spaceTexture, lightPos, camera, ambientMusic;
 
@@ -31,26 +31,26 @@ function setInitialState() {
 
 }
 
-// Also starts the game after loading models
+// Loads the models and starts the game
 function modelLoad(meshes) {
   models.meshes = meshes;
   OBJ.initMeshBuffers(gl, models.meshes.sphere);
   OBJ.initMeshBuffers(gl, models.meshes.low_sphere);
   OBJ.initMeshBuffers(gl, models.meshes.cubeBackground);
-  // OBJ.initMeshBuffers(gl, models.meshes.cubeGun);
 
   models.meshes.cubeGun = Object.assign({}, models.meshes.cubeBackground);
 
+  spheres = []
   models.meshes.sphere.type = "sphere";
   models.meshes.low_sphere.type = "sphere";
-  sphere1 = new GameObject(models.meshes.sphere, [-2,0,0], [2,2,2], models.meshes.low_sphere);
-  sphere2 = new GameObject(models.meshes.sphere, [2,0,-5], [2,2,2], models.meshes.low_sphere);
-  sphere3 = new GameObject(models.meshes.sphere, [4,-5,-100], [2,2,2], models.meshes.low_sphere);
-  sphere4 = new GameObject(models.meshes.sphere, [-20,10,-100], [2,2,2], models.meshes.low_sphere);
+  spheres[0] = new GameObject(models.meshes.sphere, [-2,0,0], [2,2,2], models.meshes.low_sphere);
+  spheres[1] = new GameObject(models.meshes.sphere, [2,0,-5], [2,2,2], models.meshes.low_sphere);
+  spheres[2] = new GameObject(models.meshes.sphere, [4,-5,-100], [2,2,2], models.meshes.low_sphere);
+  spheres[3] = new GameObject(models.meshes.sphere, [-20,10,-100], [2,2,2], models.meshes.low_sphere);
 
   models.meshes.cubeGun.type = "gun";
   gun = new GameObject(models.meshes.cubeGun);
-  gun.model = mult(gun.model, translate(-0.25,-1.1,0));
+  gun.model = mult(gun.model, translate(-0.45, -1.1, 0.0));
   gun.model = mult(gun.model, rotate(45, [0,0,1]));
 
   models.meshes.cubeBackground.type = "background";
@@ -58,32 +58,34 @@ function modelLoad(meshes) {
   background.model = mult(background.model, translate(0,0,1000));
   background.model = mult(background.model, scalem(2,2,0.01))
 
-  // keep a hash table for objects (to be able to loop through)
+  // Hash table for all objects
+  // Should make it more object oriented later :)
   objects = {}
-  objects.sphere1 = sphere1;
-  objects.sphere2 = sphere2;
-  objects.sphere3 = sphere3;
-  objects.sphere4 = sphere4;
+  objects.sphere1 = spheres[0];
+  objects.sphere2 = spheres[1];
+  objects.sphere3 = spheres[2];
+  objects.sphere4 = spheres[3];
   objectNames = Object.keys(objects)
 
   gameLoop();
 }
 
 function handleLoadedTexture(textures) {
-  console.log(textures);
   gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, true);
 
-  gl.bindTexture(gl.TEXTURE_2D, textures[0]);
-  gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, textures[0].image);
-  gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
-  gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR_MIPMAP_NEAREST);
-  gl.generateMipmap(gl.TEXTURE_2D);
+  for (var i=0; i<textures.length; i++) {
+    gl.bindTexture(gl.TEXTURE_2D, textures[i]);
+    gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, textures[i].image);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
 
-  gl.bindTexture(gl.TEXTURE_2D, textures[1]);
-  gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, textures[1].image);
-  gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
-  gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR_MIPMAP_NEAREST);
-  gl.generateMipmap(gl.TEXTURE_2D);
+    // Don't assume to the power of 2
+    // gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR_MIPMAP_NEAREST);
+    // gl.generateMipmap(gl.TEXTURE_2D);
+  }
+
 
   gl.bindTexture(gl.TEXTURE_2D, null);
 }
@@ -91,12 +93,14 @@ function handleLoadedTexture(textures) {
 function initTexture() {
   spaceTexture = gl.createTexture();
   spaceTexture.image = new Image();
+  spaceTexture.image.crossOrigin = ''
   spaceTexture.image.src = "textures/space_1024.png";
   textures.background = spaceTexture;
 
   gunTexture = gl.createTexture();
   gunTexture.image = new Image();
-  gunTexture.image.src = "textures/gun_1024.jpg";
+  gunTexture.crossOrigin = ''
+  gunTexture.image.src = "textures/lasergun.png";
   textures.gun = gunTexture;
 
   textures = [spaceTexture, gunTexture];
@@ -127,11 +131,21 @@ window.onload = function () {
   setInitialState();
 
   ambientMusic = new sound("audio/space.mp3");
-  gunfire = new sound("audio/gunfire.mp3");
+  gunfire = new sound("audio/laserblast.mp3");
   gunfire.sound.volume = 0.5;
 
   ambientMusic.sound.loop = true;
   ambientMusic.play();
+
+  if (document.getElementById('detailOption').value == "high") {
+    detailOption = "high";
+  }
+  else if (document.getElementById('detailOption').value == "low") {
+    detailOption = "low";
+  }
+
+  godMode = false;
+
 }
 
 function animate() {
@@ -146,10 +160,12 @@ function animate() {
     totalMinutes += 1;
   }
 
-  if (frameNumber % 100 > 98) {
-    health -= lostHealthPerSecond;
-    if (health <= 0) {
-      gameEnded = true;
+  if (!godMode) {
+    if (frameNumber % 100 > 98) {
+      health -= parseInt(lostHealthPerSecond * 0.005 * frameNumber);
+      if (health <= 0) {
+        gameEnded = true;
+      }
     }
   }
 
@@ -169,19 +185,19 @@ function animate() {
 }
 
 function animateObjects() {
-  sphere1.x -= Math.cos(degToRad(rotationAngle)) * 0.001 * elapsed;
+  spheres[0].x -= Math.cos(degToRad(rotationAngle)) * 0.001 * elapsed;
 
-  sphere2.y += Math.cos(degToRad(rotationAngle)) * 0.001 * elapsed;
-  sphere2.z += Math.sin(degToRad(rotationAngle)) * 0.005 * elapsed;
+  spheres[1].y += Math.cos(degToRad(rotationAngle)) * 0.001 * elapsed;
+  spheres[1].z += Math.sin(degToRad(rotationAngle)) * 0.005 * elapsed;
 
-  sphere3.y += Math.sin(degToRad(rotationAngle)) * 0.001 * elapsed;
-  sphere3.x -= Math.cos(degToRad(rotationAngle)) * 0.001 * elapsed;
+  spheres[2].y += Math.sin(degToRad(rotationAngle)) * 0.001 * elapsed;
+  spheres[2].x -= Math.cos(degToRad(rotationAngle)) * 0.001 * elapsed;
 
-  sphere4.y -= Math.sin(degToRad(rotationAngle)) * 0.002 * elapsed;
-  sphere4.x += 0.001 * elapsed;
+  spheres[3].y -= Math.sin(degToRad(rotationAngle)) * 0.002 * elapsed;
+  spheres[3].x += 0.001 * elapsed;
 
-  if (sphere4.x > 30) {
-    sphere4.x = -30;
+  if (spheres[3].x > 30) {
+    spheres[3].x = -30;
   }
 }
 
@@ -193,28 +209,37 @@ function gameLoop() {
   orthoProj =  ortho(1, -1, -1, 1, 0.1, 1000);
   persProj = perspective(20, screenSize[0] / screenSize[1], 0.1, 1000);
 
+  // Draw 2D Parts (Background + Gun)
   background.draw( mult(orthoProj,viewStable) );
 
   if (!gameEnded) {
-    // Draw 2D Parts (Background + Gun)
+    gun.draw ( mult(orthoProj,viewStable) );
 
     // Draw 3D Scene
     view = lookAt(add(camera.at, camera.toCam), camera.at, [0, 1, 0]);
 
-    gun.draw ( mult(orthoProj,viewStable) );
-    // For each object, check frustrum, set detail level, and draw.
+    // For each object, check frustum, set detail level, and draw.
     for (var i=0; i<objectNames.length; i++) {
-        if (objects[objectNames[i]].insideFrustrum) {
+        if (objects[objectNames[i]].insideFrustum) {
           detailLevel = objects[objectNames[i]].setLevel(camera, detailOption);
           objects[objectNames[i]].draw(mult(persProj,view), lightPos, detailLevel);
         }
     }
+
     animate();
 
     document.onkeydown = handleKeyDown;
-    document.getElementById("restart").onclick = restart;
+    document.getElementById("restart").onclick = function() {
+      // if eventType == mousedown
+      if (!(event.screenX == 0 && event.screenY == 0)) {
+        restart();
+      }
+    }
     document.getElementById("harakiri").onclick = function() {
-      gameEnded = true;
+      // if eventType == mousedown
+      if (!(event.screenX == 0 && event.screenY == 0)) {
+        gameEnded = true;
+      }
     }
     document.getElementById('detailOption').onchange = function () {
         if (event.target.value == "low") {
@@ -224,12 +249,13 @@ function gameLoop() {
           detailOption = "high";
         }
       }
+
     window.requestAnimationFrame(gameLoop);
   }
   else {
     window.cancelAnimationFrame(gameLoop);
-    document.getElementById("hud").innerHTML += "<span id='game-over'>Game Over!"
-    + " You scored " + score + "</span>";
+    document.getElementById("game-over").innerHTML = "Game Over!"
+    + " You scored " + score + ".<br/>   Press R to restart";
   }
 
 }
@@ -239,11 +265,19 @@ function handleKeyDown() {
   if (key == "r") {
     restart();
   }
-  if (key == "p") {
+  else if (key == "p") {
     if (ambientMusic.sound.paused) {
       ambientMusic.play();
     } else {
       ambientMusic.stop();
+    }
+  }
+  else if (key == "g") {
+    if (godMode == true) {
+      godMode = false;
+    }
+    else {
+        godMode = true;
     }
   }
   else if (key == "arrowup" || key == "arrowleft" || key == "arrowdown"
@@ -251,8 +285,9 @@ function handleKeyDown() {
    camera.move(key, elapsed);
   }
   else if (key == " ") {
-   camera.shoot();
-   gunfire.play();
+    gunfire.sound.currentTime = 0;
+    gunfire.play();
+    camera.shoot();
   }
 }
 
@@ -260,6 +295,7 @@ function handleKeyDown() {
 function restart() {
   gameEnded = true;
   sleep(500).then(() => {
+    document.getElementById("game-over").innerHTML =''
     setInitialState();
     gameLoop();
   })

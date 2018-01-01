@@ -108,13 +108,16 @@
 <body>
   <div id="container">
     <canvas id="gl-canvas" width="860" height="640"></canvas>
-    <div id="hud"></div> <br/>
-    <select id="detailOption">
-      <option value="high" selected>High</option>
-      <option value="low">Low</option>
-    </select>
-    <button class="button" id='restart'>Restart</button>
-    <button class="button" id='harakiri'>HARAKIRI!</button>
+    <div id="hud-top">
+      <button class="button" id='restart'>Restart</button>
+      <select id="detailOption">
+        <option value="high">High</option>
+        <option value="low" selected>Low</option>
+      </select>
+      <button class="button" id='harakiri'>HARAKIRI!</button>
+    </div>
+    <div id="hud"></div>
+    <div id="game-over"></div>
   </div>
 
 </body>

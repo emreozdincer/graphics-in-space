@@ -1,6 +1,4 @@
-# Game Project with WebGL for Computer Graphics course in Sabanci University.
-
-No library was used aside from MV.js.
+# 3D Game with WebGL for Computer Graphics course in Sabanci University.
 
 ## Notable Functionality:
 * 3D Viewing and Objects
@@ -12,10 +10,19 @@ No library was used aside from MV.js.
 * Level of Detail Control
 
 ## Game Controls:
+* Try to shoot as many objects as possible.
 * You lose HP every second and every time you miss
-* A/Left and D/Right to move left/right
-* W/S to move forward and backward
-* Up/Down to move up and down
-* Space to shoot
-* R to restart
-* P to toggle ambient sound
+* The game gets increasingly harder every second
+
+* Arrows: move
+* W/S: move forward/backward
+* Space: shoot
+
+* R: Restart
+* G: Toggle god mode
+* P: Toggle ambient sound
+
+## To Do:
+* Improve CSS
+* Improve gameplay
+* Apply more CG techniques

@@ -43,10 +43,10 @@ class GameObject
       this.mesh_low = mesh_low;
     }
 
-    this.insideFrustrum = true; // dummy
+    this.insideFrustum = true; // dummy
   }
 
-  findAABB() {
+  updateAABB() {
     // only for sphere yet
     this.upper_left = [
       this.x - this.width/2,
@@ -71,31 +71,34 @@ class GameObject
 
   // checks whether two objects collide
   intersect(b) {
+    this.updateAABB();
+    b.updateAABB();
+
     var a = this.BB;
     b = b.BB;
+
     return (a.minX <= b.maxX && a.maxX >= b.minX) &&
            (a.minY <= b.maxY && a.maxY >= b.minY) &&
            (a.minZ <= b.maxZ && a.maxZ >= b.minZ);
   }
 
-  // loops through all boxes and checks if collide
+  // loops through all boxes and checks collision
   collidesWithOtherBox(i) {
+    var collided = false;
     for (var j=0; j<objectNames.length; j++) {
-      if (i == j) { // don't check yourself
+      // don't check yourself
+      if (i == j) {
         continue;
       }
-      else {
-        if (objects[objectNames[i]].intersect(objects[objectNames[j]])) {
-          // console.log(objects[objectNames[i]].x + " " + objects[objectNames[i]].y + " " + objects[objectNames[i]].z);
-          // console.log(objects[objectNames[j]].x + " " + objects[objectNames[j]].y + " " + objects[objectNames[j]].z);
-          return true;
-        }
+      else if (this.intersect(objects[objectNames[j]])) {
+        collided = true;
       }
     }
-    return false;
+    return collided;
   }
-  setLevel(camera, levelOption) {
-    if (levelOption == "low") {
+
+  setLevel(camera, detailOption) {
+    if (detailOption == "low") {
       return "low";
     }
 
@@ -119,7 +122,7 @@ class GameObject
     model = mult(this.model, model);
 
     if (this.x != null && this.y != null && this.z !=null) {
-      this.findAABB();
+      this.updateAABB();
       model = mult(this.model, translate(this.x, this.y, this.z));
     }
 

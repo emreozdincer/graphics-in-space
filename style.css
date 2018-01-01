@@ -28,51 +28,53 @@ body {
   margin-left: 360px;
   position: absolute;
 }
+
 #hud #time {
   float: right;
   margin-right: 5px;
 }
 
-#hud #game-over {
+#game-over {
   color: red;
-  float: right;
+  top: 280px;
+  margin-left: 150px;
+  font-size: 1.4em;
   position: absolute;
-  /* margin-right: 10px; */
-  padding: 15px 32px;
+  width: inherit;
   opacity: 1;
-  /* width: 100%; */
-  background-color: black;
+  /* background-color: black; */
 }
 
-.button {
-    background-color: black;
-    border: none;
-    color: white;
-    padding: 15px 32px;
-    text-align: center;
-    font-size: 0.6em;
-    opacity:1;
-}
-
-select {
-  background-color: black;
-  border: none;
+button, select {
+  background-color:  black;
+  border-style: solid;
+  border-color: AliceBlue;
+  border-width: thin;
   color: white;
-  padding: 15px 32px;
-  margin-left: 230px;
+  padding: 10px 20px;
   text-align: center;
   font-size: 0.6em;
   cursor: pointer;
 }
 
-select option:hover {
-    box-shadow: 0 0 10px 100px #000 inset;
+#hud-top {
+  opacity:0.8;
+  position: absolute;
+  top: 3px;
+  width: inherit;
+  height: 70px;
 }
 
 #restart {
     float: left;
+    margin-left: 5px;
+}
+
+#detailOption {
+  margin-left: 245px;
 }
 
 #harakiri{
     float: right;
+    margin-right: 5px;
 }
