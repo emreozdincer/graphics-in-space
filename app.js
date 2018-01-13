@@ -1,14 +1,14 @@
 // game state
-var score, bestScore, time, lastTime, frameNumber, health, totalMinutes, totalMilliSeconds, lostHealthPerSecond, godMode, elapsed, rotationAngle, gameEnded, objectDistance, detailOption;
+var score, bestScore, time, lastTime, frameNumber, health, totalMinutes, totalMilliSeconds, lostHealthMultiplier, godMode, elapsed, rotationAngle, gameEnded, objectDistance, detailOption;
 // objects, models
-var models = {}; var objects = {}; var textures = {};
+var models = {}; var objects = {};
 var spheres, teddy, castle, gun, background, objectNames;
 // design
 var spaceTexture, lightPos, camera, ambientMusic;
 
 function setInitialState() {
   score = 0;
-  lostHealthPerSecond = 10;
+  lostHealthMultiplier = 5;
   frameNumber = 0;
   health = 100;
   totalMilliSeconds = 0;
@@ -44,7 +44,7 @@ function modelLoad(meshes) {
   models.meshes.sphere.type = "sphere";
   models.meshes.low_sphere.type = "sphere";
   spheres[0] = new GameObject(models.meshes.sphere, [-2,0,0], [2,2,2], models.meshes.low_sphere);
-  spheres[1] = new GameObject(models.meshes.sphere, [2,0,-5], [2,2,2], models.meshes.low_sphere);
+  spheres[1] = new GameObject(models.meshes.sphere, [2,0,-10], [2,2,2], models.meshes.low_sphere);
   spheres[2] = new GameObject(models.meshes.sphere, [4,-5,-100], [2,2,2], models.meshes.low_sphere);
   spheres[3] = new GameObject(models.meshes.sphere, [-20,10,-100], [2,2,2], models.meshes.low_sphere);
 
@@ -86,26 +86,37 @@ function handleLoadedTexture(textures) {
     // gl.generateMipmap(gl.TEXTURE_2D);
   }
 
+  spaceTexture = actualSpaceTexture;
+  gunTexture = actualGunTexture;
 
   gl.bindTexture(gl.TEXTURE_2D, null);
 }
 
 function initTexture() {
-  spaceTexture = gl.createTexture();
-  spaceTexture.image = new Image();
-  spaceTexture.image.crossOrigin = ''
-  spaceTexture.image.src = "textures/space_1024.png";
-  textures.background = spaceTexture;
+  // TODO: Wait for all images to load rather than the biggest one.
 
-  gunTexture = gl.createTexture();
-  gunTexture.image = new Image();
-  gunTexture.crossOrigin = ''
-  gunTexture.image.src = "textures/lasergun.png";
-  textures.gun = gunTexture;
+  // use a default black texture until the actual ones are loaded
+  preloadTexture = gl.createTexture();
+  gl.bindTexture(gl.TEXTURE_2D, preloadTexture);
+  gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, 1, 1, 0, gl.RGBA, gl.UNSIGNED_BYTE, new Uint8Array([0, 0, 0, 255]));
 
-  textures = [spaceTexture, gunTexture];
-  gunTexture.image.onload = function () {
-      handleLoadedTexture(textures)
+  // to be set to actual variables later.
+  spaceTexture = preloadTexture;
+  gunTexture = preloadTexture;
+
+  actualSpaceTexture = gl.createTexture();
+  actualSpaceTexture.image = new Image();
+  actualSpaceTexture.image.crossOrigin = ''
+  actualSpaceTexture.image.src = "textures/space_1024.png";
+
+  actualGunTexture = gl.createTexture();
+  actualGunTexture.image = new Image();
+  actualGunTexture.crossOrigin = ''
+  actualGunTexture.image.src = "textures/lasergun.png";
+
+  textures = [actualSpaceTexture, actualGunTexture];
+  actualGunTexture.image.onload = function () {
+    handleLoadedTexture(textures)
   };
 }
 
@@ -113,7 +124,7 @@ window.onload = function () {
   let canvas = document.getElementById("gl-canvas");
   gl = WebGLUtils.setupWebGL(canvas);
   if (!gl) {
-      alert("yo");
+      alert("WebGL is not available.");
   }
 
   screenSize = [canvas.width, canvas.height];
@@ -162,7 +173,7 @@ function animate() {
 
   if (!godMode) {
     if (frameNumber % 100 > 98) {
-      health -= parseInt(lostHealthPerSecond * 0.005 * frameNumber);
+      health -= parseInt(lostHealthMultiplier * 0.005 * frameNumber);
       if (health <= 0) {
         gameEnded = true;
       }
