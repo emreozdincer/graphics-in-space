@@ -142,7 +142,7 @@ window.onload = function () {
   setInitialState();
 
   ambientMusic = new sound("audio/space.mp3");
-  gunfire = new sound("audio/laserblast.mp3");
+  gunfire = new Audio("audio/laserblast.mp3");
   gunfire.sound.volume = 0.5;
 
   ambientMusic.sound.loop = true;
@@ -296,12 +296,15 @@ function handleKeyDown() {
    camera.move(key, elapsed);
   }
   else if (key == " ") {
-    gunfire.sound.currentTime = 0;
-    gunfire.play();
+    playGunShot();
     camera.shoot();
   }
 }
 
+function playGunShot() {
+  var click=gunfire.cloneNode();
+  click.play();
+}
 // The sleep is necessary, otherwise requestAnimationFrame calls get stacked
 function restart() {
   gameEnded = true;

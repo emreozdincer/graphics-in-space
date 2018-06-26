@@ -2,7 +2,7 @@ class Camera
 {
     constructor(){
       this.at = vec3(0,0,0);
-      this.eye = vec3(0,0,15);
+      this.eye = vec3(0,0,20);
       this.toCam = subtract(this.eye, this.at);
       this.updateCoordinates();
     }
