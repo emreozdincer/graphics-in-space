@@ -143,17 +143,12 @@ window.onload = function () {
 
   ambientMusic = new sound("audio/space.mp3");
   gunfire = new Audio("audio/laserblast.mp3");
-  gunfire.sound.volume = 0.5;
+  gunfire.volume = 0.5;
 
   ambientMusic.sound.loop = true;
   ambientMusic.play();
 
-  if (document.getElementById('detailOption').value == "high") {
-    detailOption = "high";
-  }
-  else if (document.getElementById('detailOption').value == "low") {
-    detailOption = "low";
-  }
+  detailOption = document.getElementById('detailOption').value;
 
   godMode = false;
 
